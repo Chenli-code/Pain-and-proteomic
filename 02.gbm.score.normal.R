@@ -1,4 +1,4 @@
-#===== RF Model protein =====
+#=====  Model protein =====
 library(caret)
 library(foreach)
 library(doParallel)
@@ -27,8 +27,8 @@ library(xgboost)
 
 
 # load data
-protein_selected = readRDS('D:/Desktop/PhD/10-学术项目/34-chronic_pain/Prediction_model/DataPreparation/name_protein.rds')
-load('D:/Desktop/PhD/10-学术项目/34-chronic_pain/Temp_folder2/Data_analysis_R2.RData')
+protein_selected = readRDS('name_protein.rds')
+load('Data_analysis_R2.RData')
 data = data %>% filter(!is.na(missing_per_protein))
 
 ##### normalization for protein data #####
@@ -59,18 +59,6 @@ for (outcome in outcomes) {
   ##### all ProRS #####
   # Select the proteins associated with the current outcome
   lasso_protein = Protein_association[which(Protein_association$outcome == outcome), 'exposure']
-  # # Use Lasso (L1 Regularization) to further refine important features
-  # set.seed(123)
-  # df = data[,c(outcome,protein_selected)]
-  # df = df[!is.na(df[,outcome]),]
-  # y =df[,outcome]
-  # X_selected_df = df[,protein_selected]
-  # x_matrix <- model.matrix(~., data = X_selected_df)[, -1]
-  # lasso_model <- cv.glmnet(x_matrix, y, alpha = 1, family = "binomial")
-  # coef_matrix <- coef(lasso_model, s = "lambda.min")
-  # coef_df <- as.data.frame(as.matrix(coef_matrix))
-  # lasso_protein <- rownames(coef_df)[which(coef_df != 0)[-1]]
-  # Convert the outcome variable to a factor
   data_protein = data
   data_protein[, outcome] = ifelse(data_protein[, outcome] == 1,'Y','N')
   data_protein[, outcome] = as.factor(data_protein[, outcome])
@@ -169,4 +157,4 @@ ProRS = data[, c('f.eid',paste0(outcomes, '_ProRS'),paste0(outcomes, '_simpleRS'
 # Save the variable importance results to a CSV file
 write.csv(importance_df, file = 'Results_wide_association/relative_df_normalization_chronic.csv', row.names = FALSE)
 
-save(ProRS, file = 'D:/Desktop/PhD/10-学术项目/34-chronic_pain/Temp_folder2/ProRS_gbm.RData')
+save(ProRS, file = 'ProRS_gbm.RData')
