@@ -10,51 +10,23 @@ library(boot)
 library(isotone)
 
 # load data
-load('D:/Desktop/PhD/10-学术项目/34-chronic_pain/Temp_folder2/Data_analysis_R2.RData')
+load('Data_analysis_R2.RData')
 data = data %>% filter(!is.na(missing_per_protein))
 
-##### normalization for protein data #####
-# for (pro in protein_selected) {
-#   cat(pro,'-')
-#   data[[pro]] = scale(data[[pro]])
-# }
-#### set the same control for all pain #####
-# head(data[,outcomes]) 
-# data$pain_sites = rowSums(data[,outcomes],na.rm=T)
-# for (pain in outcomes) {
-#   data[,pain] = ifelse(data$overall_pain == 0 | data[,pain] == 1,data[,pain],NA)
-# }
-# data = data %>% filter(chronic_pain_status %in% c(0,1))
-load('D:/Desktop/PhD/10-学术项目/34-chronic_pain/Temp_folder2/ProRS_xgboost_cv.RData')
-# ProRS = ProRS %>% filter(!is.na( chronic_pain_status_ProRS))
+load('ProRS_xgboost_cv.RData')
+
 df = merge(data,ProRS,by='f.eid',all.y=T)
 
 life_style = c('Sleeplessness','Fed_up','tiredness','nerves','life_stress','BMI_cat')
 for (variable in life_style) {
   df[[variable]] = as.numeric(df[[variable]])
 }
-# df[life_style] <- lapply(df[life_style], as.numeric)
+
 outcomes = c('chronic_pain_status',
              'Head_and_Face_Pain',
              'Abdominal_Pain','Neck_Shoulder_and_Back_Hip_and_Knee_Pain',
              'Generalized_Pain')
-##### 
-# for (out in outcomes) {
-#   ProRS_prob2 = df[,paste0(out,'_ProRS')]
-#   platt_model <- glm(df[, out] ~ ProRS_prob2, family = binomial)
-#   ProRS_prob2 <- predict(platt_model, newdata = data.frame(predicted_probs = ProRS_prob2), type = "response")
-#   df[[paste0(out, '_ProRS')]] <- ProRS_prob2
-#   
-#   
-#   ProRS_prob2 = df[,paste0(out,'_simpleRS')]
-#   platt_model <- glm(df[, out] ~ ProRS_prob2, family = binomial)
-#   ProRS_prob2 <- predict(platt_model, newdata = data.frame(predicted_probs = ProRS_prob2), type = "response")
-#   df[[paste0(out, '_simpleRS')]] <- ProRS_prob2
-#   
-# }
 
-
-##### variable importance #####
 
 results <- list()
 
@@ -293,4 +265,4 @@ for (out in outcomes) {
 
 
 
-save(results, file = 'D:/Desktop/PhD/10-学术项目/34-chronic_pain/Temp_folder2/Model.results_PROS_chronic.RData')
+save(results, file = 'Model.results_PROS_chronic.RData')
