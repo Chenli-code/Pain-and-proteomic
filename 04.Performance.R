@@ -1,4 +1,4 @@
-load('D:/Desktop/PhD/10-学术项目/34-chronic_pain/Temp_folder2/Model.results_PROS_chronic.RData')
+load('Model.results_PROS_chronic.RData')
 
 
 outcomes = c('chronic_pain_status',
@@ -118,21 +118,18 @@ for (i in 1:5) {
   library(CalibrationCurves)
   p = valProbggplot(results[[paste0(out,'_pro.prob2')]], 
                     as.numeric(as.character(results[[paste0(out,'_test')]][,out])))
-  # 提取校准结果及置信区间
+  
   calibration_intercept <- p$Calibration$Intercept[1]
   calibration_ci_lower <- p$Calibration$Intercept[2]
   calibration_ci_upper <- p$Calibration$Intercept[3]
   
-  # 格式化校准结果和置信区间
   calibration_text <- sprintf("Intercept: %.2f (%.2f, %.2f)", 
                               calibration_intercept, calibration_ci_lower, calibration_ci_upper)
-  
-  # 提取校准结果及置信区间
+
   calibration_Slope <- p$Calibration$Slope[1]
   Slope_ci_lower <- p$Calibration$Slope[2]
   Slope_ci_upper <- p$Calibration$Slope[3]
   
-  # 格式化校准结果和置信区间
   Slope_text <- sprintf("Slope: %.2f (%.2f, %.2f)", 
                         calibration_Slope, Slope_ci_lower, Slope_ci_upper)
   
@@ -167,75 +164,3 @@ cali = ggarrange(cali_chronic_pain_status,cali_Head_and_Face_Pain,cali_Abdominal
                  cali_Neck_Shoulder_and_Back_Hip_and_Knee_Pain,
                  # cali_Generalized_Pain,
                  ncol = 1, nrow = 4)
-# cali = cali_chronic_pain_status
-
-pp = ggarrange(roc,cali,ncol = 2, nrow = 1)
-pp
-export::graph2ppt(file=paste0('results/calibration_all2.pptx'),width = 8,height =15, append = T)
-
-pp = ggarrange(roc_Generalized_Pain,
-               ggarrange(cali_Generalized_Pain,cali_Generalized_Pain,ncol = 1, nrow = 2),
-               widths = c(0.6,0.4),
-               ncol = 2, nrow = 1)
-pp
-export::graph2ppt(file=paste0('results/calibration.pptx'),width = 8,height =5, append = T)
-
-
-
-for (out in outcomes) {
-  
-  # simple_pro = pro_im[which(pro_im$outcome == out),]$pro
-  ##### standardized net benefit curve ##### 
-  library('rmda')
-  # The author sets seed at 123; I do the same throughout this document to replicate the results
-  set.seed(123)
-  
-  test = results[[paste0(out,'_test')]]
-  test[,out] = as.numeric(as.character(test[,out]))
-  # the below model is run with default settings and 50 bootstraps
-  set.seed(123)
-  life.model <- decision_curve(as.formula(paste(out,"~", paste(c(life_style), collapse = " + "))), #fitting a logistic model
-                               data = test[,c(out,life_style)],
-                               # study.design = "cohort",
-                               policy = "opt-in", #default
-                               bootstraps = 50)
-  set.seed(123)
-  I_PS.model <- decision_curve(as.formula(paste(out,"~", paste(c(paste0(out,'_ProRS')), collapse = " + "))), #fitting a logistic model
-                               data = test[,c(out,paste0(out,'_ProRS'))],
-                               # study.design = "cohort",
-                               policy = "opt-in", #default
-                               bootstraps = 50)
-  set.seed(123)
-  pro.model <- decision_curve(as.formula(paste(out,"~", paste(c(life_style,paste0(out,'_ProRS')), collapse = " + "))), #fitting a logistic model
-                              data = test[,c(out,life_style,paste0(out,'_ProRS'))],
-                              # study.design = "cohort",
-                              policy = "opt-in", #default
-                              bootstraps = 50)
-  
-  set.seed(123)
-  simple.model <- decision_curve(as.formula(paste(out,"~", paste(c(paste0(out, '_simpleRS')), collapse = " + "))), #fitting a logistic model
-                                 data = test[,c(out,paste0(out, '_simpleRS'))],
-                                 # study.design = "cohort",
-                                 policy = "opt-in", #default
-                                 bootstraps = 50)
-  
-  set.seed(123)
-  simpletop.model <- decision_curve(as.formula(paste(out,"~", paste(c(life_style,paste0(out, '_simpleRS')), collapse = " + "))), #fitting a logistic model
-                                    data = test[,c(out,life_style,paste0(out, '_simpleRS'))],
-                                    # study.design = "cohort",
-                                    policy = "opt-in", #default
-                                    bootstraps = 50)
-  
-  
-  # png("results/net benefit curve.png")
-  net <- plot_decision_curve( 
-    list(life.model,I_PS.model,pro.model,simple.model,simpletop.model), 
-    confidence.intervals = F,cost.benefit.xlab = F,standardize = T,cost.benefit.axis = FALSE,
-    curve.names = c('CS','I-PS','CS+I-PS','S-PS','CS+S-PS'),
-    col = c("#374E55FF", "#DF8F44FF", "#00A1D5FF", "#925E9FFF", "#AD002AFF"),
-    legend.position = 'none')
-  
-  # export::graph2ppt(file=paste0('results/benefit.pptx'),width = 5.8,height =6.2, append = T)
-  export::graph2ppt(file=paste0('results/benefit3_',out,'.pptx'),width = 4.7,height =4, append = T)
-  
-}
